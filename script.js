@@ -1,4 +1,5 @@
 let score = 0;
+let energy = 5;
 
 const attacks = [];
 
@@ -13,17 +14,25 @@ const attackValueInput = document.getElementById("attackValue");
 const message = document.getElementById("message");
 
 const historyList = document.getElementById("history");
+const attackCount = document.getElementById("attackCount");
+const largestAttack = document.getElementById("largestAttack");
+const energyDisplay = document.getElementById("energy");
 
 function updateDisplay() {
     scoreDisplay.innerText = score;
+    attackCount.innerText = attacks.length;
+    largestAttack.innerText = findLargestAttack(attacks);
+    energyDisplay.innerText = energy;
     updateHistory();
 
     if (score >= 20) {
         title.innerText = "YOU WIN!";
         attackButton.disabled = true;
+        powerButton.disabled = true;
     } else {
         title.innerText = "Click Attack";
         attackButton.disabled = false;
+        powerButton.disabled = false;
     }
 }
 
@@ -50,6 +59,17 @@ function getAttackValue() {
     return attackValue;
 }
 
+function getPlayerName() {
+    const playerName = playerNameInput.value.trim();
+
+    if (playerName === "") {
+        message.innerText = "Please enter your name.";
+        return null;
+    }
+
+    return playerName;
+}
+
 function calculateDamage(baseDamage, isCritical) {
     if (isCritical) {
         return baseDamage * 2;
@@ -58,30 +78,75 @@ function calculateDamage(baseDamage, isCritical) {
     return baseDamage;
 }
 
-function performAttack() {
-    const playerName = playerNameInput.value.trim();
-    const attackValue = getAttackValue();
+function findLargestAttack(values) {
+    if (values.length === 0) {
+        return 0;
+    }
 
-    if (playerName === "") {
-        message.innerText = "Please enter your name.";
+    let largest = values[0];
+
+    for (let index = 0; index < values.length; index++) {
+        if (values[index] > largest) {
+            largest = values[index];
+        }
+    }
+
+    return largest;
+}
+
+function applyAttack(playerName, baseDamage, isCritical) {
+    const damage = calculateDamage(baseDamage, isCritical);
+
+    score += damage;
+    attacks.push(damage);
+    energy--;
+
+    message.innerText = `${playerName} caused ${damage} damage.`;
+    updateDisplay();
+}
+
+function canAttack() {
+    if (energy <= 0) {
+        message.innerText = "You are out of energy. Press Reset to play again.";
+        return false;
+    }
+
+    return true;
+}
+
+function performAttack() {
+    if (!canAttack()) {
         return;
     }
+
+    const playerName = getPlayerName();
+
+    if (playerName === null) {
+        return;
+    }
+
+    const attackValue = getAttackValue();
 
     if (attackValue === null) {
         return;
     }
 
     const isCritical = attackValue === 10;
-    const damage = calculateDamage(attackValue, isCritical);
-
-    score += damage;
-    attacks.push(damage);
-    message.innerText = `${playerName} caused ${damage} damage.`;
-    updateDisplay();
+    applyAttack(playerName, attackValue, isCritical);
 }
-function addPowerPoint() {
-    score += 5;
-    updateDisplay();
+
+function performPowerAttack() {
+    if (!canAttack()) {
+        return;
+    }
+
+    const playerName = getPlayerName();
+
+    if (playerName === null) {
+        return;
+    }
+
+    applyAttack(playerName, 5, false);
 }
 
 function updateHistory() {
@@ -94,9 +159,9 @@ function updateHistory() {
     }
 }
 
-// TODO: create resetGame()
 function resetGame() {
     score = 0;
+    energy = 5;
     attacks.length = 0;
     playerNameInput.value = "";
     attackValueInput.value = "1";
@@ -104,7 +169,9 @@ function resetGame() {
     message.innerText = "Enter your name and choose an attack value.";
     updateDisplay();
 }
-// TODO: connect both functions to buttons
+
 attackButton.addEventListener("click", performAttack);
-powerButton.addEventListener("click", addPowerPoint);
+powerButton.addEventListener("click", performPowerAttack);
 resetButton.addEventListener("click", resetGame);
+
+updateDisplay();
