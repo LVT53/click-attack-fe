@@ -6,6 +6,10 @@ const attackButton = document.getElementById("attackButton");
 const resetButton = document.getElementById("resetButton");
 const powerButton = document.getElementById("powerButton");
 
+const playerNameInput = document.getElementById("playerName");
+const attackValueInput = document.getElementById("attackValue");
+const message = document.getElementById("message");
+
 function updateDisplay() {
     scoreDisplay.innerText = score;
 
